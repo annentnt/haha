@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Warning</title>
+    <style>
+        html, body {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            background: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        .warning-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            text-align: center;
+            color: green;
+        }
+
+        #warning {
+            font-size: 24px;
+        }
+
+        #alert {
+            font-size: 30px;
+            color: red;
+            font-weight: bold;
+            margin-top: 20px;
+            animation: blink 1s infinite alternate;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .box {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            display: none;
+        }
+
+        canvas {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .confirm-dialog {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border: 2px solid #ff0000;
+            border-radius: 10px;
+            z-index: 3;
+            text-align: center;
+            color: white;
+        }
+
+        .confirm-dialog button {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .continue-btn {
+            background: #ff0000;
+            color: white;
+        }
+
+        .stop-btn {
+            background: #666;
+            color: white;
+        }
+
+        .bad-text {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: red;
+            font-size: 72px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="warning-container" id="warningText">
+        <div id="warning">⚠ Your system has been infected with a virus! ⚠</div>
+        <div id="alert">System is being compromised...</div>
+    </div>
+
+    <div class="confirm-dialog" id="confirmDialog">
+        <h2>Do you want to continue?</h2>
+        <button class="continue-btn" onclick="handleContinue()">Continue</button>
+        <button class="stop-btn" onclick="handleStop()">Stop</button>
+    </div>
+
+    <div class="bad-text" id="badText">BAD!</div>
+
+    <div class="box" id="heartContainer">
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script>
+        setTimeout(() => {
+            document.getElementById('warningText').style.display = 'none';
+            document.getElementById('confirmDialog').style.display = 'block';
+        }, 3000);
+
+        function handleStop() {
+            document.getElementById('confirmDialog').style.display = 'none';
+            document.getElementById('badText').style.display = 'block';
+        }
+
+        function handleContinue() {
+            document.getElementById('confirmDialog').style.display = 'none';
+            document.getElementById('heartContainer').style.display = 'block';
+            initializeHeart();
+        }
+
+        function initializeHeart() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            let particles = [];
+            let edgeParticles = [];
+            let phase = 'falling';
+            const fallingParticleCount = 200;
+
+            class Particle {
+                constructor(isFalling = true, isEdge = false) {
+                    if (isFalling) {
+                        this.x = Math.random() * canvas.width;
+                        this.y = Math.random() * -canvas.height;
+                        this.speedX = Math.random() * 2 - 1;
+                        this.speedY = Math.random() * 2 + 1;
+                    } else {
+                        const t = Math.random() * 2 * Math.PI;
+                        const r = Math.random() * 0.2 + 0.8;
+                        this.angle = t;
+                        this.radius = r;
+                        this.updateHeartPosition();
+                    }
+                    this.size = Math.random() * 2 + 1;
+                    this.opacity = isEdge ? 0 : 0.8;
+                    this.fadeSpeed = 0.05;
+                    this.isEdge = isEdge;
+                    this.visible = !isEdge;
+                    this.fadeDirection = 1;
+                }
+
+                updateHeartPosition() {
+                    const scale = Math.min(canvas.width, canvas.height) / 50;
+                    const x = this.radius * (16 * Math.pow(Math.sin(this.angle), 3));
+                    const y = -this.radius * (13 * Math.cos(this.angle) - 5 * Math.cos(2 * this.angle) 
+                             - 2 * Math.cos(3 * this.angle) - Math.cos(4 * this.angle));
+                    
+                    this.targetX = canvas.width / 2 + x * scale;
+                    this.targetY = canvas.height / 2 + y * scale;
+                    
+                    if (!this.x) {
+                        this.x = Math.random() * canvas.width;
+                        this.y = Math.random() * -canvas.height;
+                    }
+                }
+
+                update() {
+                    if (phase === 'falling') {
+                        this.y += this.speedY;
+                        this.x += this.speedX;
+                        
+                        if (this.y > canvas.height) {
+                            this.x = Math.random() * canvas.width;
+                            this.y = Math.random() * -canvas.height;
+                        }
+                    } else if (phase === 'forming') {
+                        const dx = this.targetX - this.x;
+                        const dy = this.targetY - this.y;
+                        this.x += dx * 0.05;
+                        this.y += dy * 0.05;
+                    } else if (phase === 'heart') {
+                        if (this.isEdge) {
+                            if (Math.random() < 0.02) {
+                                this.visible = !this.visible;
+                            }
+                            if (this.visible) {
+                                this.opacity += this.fadeSpeed * this.fadeDirection;
+                                if (this.opacity >= 0.8) {
+                                    this.opacity = 0.8;
+                                    this.fadeDirection = -1;
+                                } else if (this.opacity <= 0) {
+                                    this.opacity = 0;
+                                    this.visible = false;
+                                }
+                            }
+                        }
+                        const movement = Math.sin(Date.now() * 0.001) * 0.5;
+                        this.x = this.targetX + movement;
+                        this.y = this.targetY + movement;
+                    }
+                }
+
+                draw() {
+                    ctx.fillStyle = `rgba(255, 99, 132, ${this.opacity})`;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+
+            function createEdgeParticles() {
+                const edgeParticles = [];
+                for (let i = 0; i < 200; i++) {
+                    const particle = new Particle(false, true);
+                    // Thêm độ lệch ngẫu nhiên để tạo viền dày hơn
+                    const offset = (Math.random() - 0.5) * 4;
+                    particle.radius += offset * 0.1;
+                    edgeParticles.push(particle);
+                }
+                return edgeParticles;
+            }
+
+            // Create initial falling particles
+            for (let i = 0; i < fallingParticleCount; i++) {
+                particles.push(new Particle(true));
+            }
+
+            let scale = 1;
+            let scaleDirection = 0.005;
+
+            function animate() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                if (phase === 'heart') {
+                    scale += scaleDirection;
+                    if (scale > 1.1 || scale < 0.9) {
+                        scaleDirection = -scaleDirection;
+                    }
+                    
+                    ctx.save();
+                    ctx.translate(canvas.width / 2, canvas.height / 2);
+                    ctx.scale(scale, scale);
+                    ctx.translate(-canvas.width / 2, -canvas.height / 2);
+                }
+
+                // Update and draw all particles
+                const allParticles = [...particles, ...edgeParticles];
+                for (const particle of allParticles) {
+                    particle.update();
+                    particle.draw();
+                }
+
+                if (phase === 'heart') {
+                    ctx.restore();
+                }
+
+                // Phase transitions
+                const currentTime = Date.now() - startTime;
+                if (phase === 'falling' && currentTime > 3000) {
+                    phase = 'forming';
+                    particles = [];
+                    for (let i = 0; i < 1500; i++) {
+                        particles.push(new Particle(false));
+                    }
+                    edgeParticles = createEdgeParticles();
+                } else if (phase === 'forming' && currentTime > 6000) {
+                    phase = 'heart';
+                }
+
+                requestAnimationFrame(animate);
+            }
+
+            const startTime = Date.now();
+            animate();
+
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+                if (phase === 'heart' || phase === 'forming') {
+                    const allParticles = [...particles, ...edgeParticles];
+                    allParticles.forEach(particle => particle.updateHeartPosition());
+                }
+            });
+        }
+    </script>
+</body>
+</html>
