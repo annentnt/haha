@@ -117,7 +117,7 @@
         <button class="stop-btn" onclick="handleStop()">Stop</button>
     </div>
 
-    <div class="bad-text" id="badText">BAD!</div>
+    <div class="bad-text" id="badText">COOK!</div>
 
     <div class="box" id="heartContainer">
         <canvas id="canvas"></canvas>
@@ -127,7 +127,7 @@
         setTimeout(() => {
             document.getElementById('warningText').style.display = 'none';
             document.getElementById('confirmDialog').style.display = 'block';
-        }, 3000);
+        }, 5000);
 
         function handleStop() {
             document.getElementById('confirmDialog').style.display = 'none';
